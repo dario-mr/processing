@@ -16,6 +16,7 @@ void drawBars(ArrayList<Integer> colors, float barWidth) {
 }
 
 void drawBar(int x, color barColor, int barWidth) {
+  noStroke();
   fill(barColor);
   rect(x, 0, barWidth, height);
 }

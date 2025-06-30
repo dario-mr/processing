@@ -28,16 +28,15 @@ int quitX = 10, quitY, quitW = 100, quitH = 30;
 
 void setup() {
   fullScreen();
-  noStroke();
 
   colors = generateColors(BASE_COLOR, GRADIENT_STEP);
   barWidth = (float) width / colors.size();
   sortSound = new SoundFile(this, "sort.wav");
   quitY = height - 50;
 
-  println("Window size: " + width + " x " + height);
-  println("Numbers of colors generated: " + colors.size());
-  println("Bar width: " + barWidth);
+  println("Window size: " + width + " x " + height + " px");
+  println("Number of generated colors: " + colors.size());
+  println("Bar width: " + barWidth + " px");
 
   shuffleColorsAndDrawBars(colors, barWidth);
 }
@@ -84,19 +83,6 @@ void mousePressed() {
     mouseY > quitY && mouseY < quitY + quitH) {
     exit();
   }
-}
-
-ArrayList<Integer> generateColors(int baseColor, float gradientStep) {
-  ArrayList<Integer> colors = new ArrayList<Integer>();
-  final float baseColorRed = red(baseColor);
-  final float baseColorBlue = blue(baseColor);
-
-  for (float i = 0; i < 255; i += gradientStep) {
-    float green = i;
-    colors.add(color(baseColorRed, green, baseColorBlue));
-  }
-
-  return colors;
 }
 
 void runSortThread() {
