@@ -1,8 +1,12 @@
-void quickSort(ArrayList<Integer> list, int low, int high) {
+void quickSort(ArrayList<Integer> items, int low, int high) {
+  if (stopSorting) {
+    return;
+  }
+
   if (low < high) {
-    int pi = partition(list, low, high);
-    quickSort(list, low, pi - 1);
-    quickSort(list, pi + 1, high);
+    int pi = partition(items, low, high);
+    quickSort(items, low, pi - 1);
+    quickSort(items, pi + 1, high);
   }
 }
 
@@ -11,6 +15,10 @@ int partition(ArrayList<Integer> list, int low, int high) {
   int i = low - 1;
 
   for (int j = low; j < high; j++) {
+    if (stopSorting) {
+      break;
+    }
+
     if (list.get(j) <= pivot) {
       i++;
       swap(list, i, j);
@@ -25,6 +33,7 @@ void swap(ArrayList<Integer> list, int i, int j) {
   list.set(i, list.get(j));
   list.set(j, temp);
 
+  // redraw UI
   needsRedraw = true;
-  delay(DRAW_DELAY_MS);
+  delay(QUICKSORT_DRAW_DELAY_MS);
 }
