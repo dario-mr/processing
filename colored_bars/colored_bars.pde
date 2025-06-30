@@ -13,6 +13,7 @@ private final int QUICKSORT_DRAW_DELAY_MS = 10;
 ArrayList<Integer> colors;
 float barWidth;
 SoundFile sortSound;
+SortType sortToRun = SortType.NONE;
 
 // visible between threads
 volatile boolean needsRedraw = false;
@@ -34,9 +35,9 @@ void setup() {
   sortSound = new SoundFile(this, "sort.wav");
   quitY = height - 50;
 
-  System.out.println("Window size: " + width + " x " + height);
-  System.out.println("Numbers of colors generated: " + colors.size());
-  System.out.println("Bar width: " + barWidth);
+  println("Window size: " + width + " x " + height);
+  println("Numbers of colors generated: " + colors.size());
+  println("Bar width: " + barWidth);
 
   shuffleColorsAndDrawBars(colors, barWidth);
 }
@@ -48,10 +49,10 @@ void draw() {
     needsRedraw = false;
   }
 
-  drawButton(shuffleX, shuffleY, shuffleW, shuffleH, "Shuffle");
-  drawButton(quicksortX, quicksortY, quicksortW, quicksortH, "Quick sort");
-  drawButton(bubblesortX, bubblesortY, bubblesortW, bubblesortH, "Bubble sort");
-  drawButton(quitX, quitY, quitW, quitH, "Quit");
+  drawButton("Shuffle", shuffleX, shuffleY, shuffleW, shuffleH);
+  drawButton("Quick sort", quicksortX, quicksortY, quicksortW, quicksortH);
+  drawButton("Bubble sort", bubblesortX, bubblesortY, bubblesortW, bubblesortH);
+  drawButton("Quit", quitX, quitY, quitW, quitH);
 }
 
 void mousePressed() {
@@ -66,14 +67,16 @@ void mousePressed() {
   if (!isSorting && mouseX > quicksortX && mouseX < quicksortX + quicksortW &&
     mouseY > quicksortY && mouseY < quicksortY + quicksortH) {
     stopSorting = false;
-    thread("quicksortThread");
+    sortToRun = SortType.QUICK;
+    thread("runSortThread");
   }
 
   // bubblesort button
   if (!isSorting && mouseX > bubblesortX && mouseX < bubblesortX + bubblesortW &&
     mouseY > bubblesortY && mouseY < bubblesortY + bubblesortH) {
     stopSorting = false;
-    thread("bubblesortThread");
+    sortToRun = SortType.BUBBLE;
+    thread("runSortThread");
   }
 
   // quit button
@@ -81,22 +84,6 @@ void mousePressed() {
     mouseY > quitY && mouseY < quitY + quitH) {
     exit();
   }
-}
-
-void quicksortThread() {
-  System.out.println("Sorting started");
-  isSorting = true;
-  quickSort(colors, 0, colors.size() - 1);
-  isSorting = false;
-  System.out.println("Sorting finished");
-}
-
-void bubblesortThread() {
-  System.out.println("Sorting started");
-  isSorting = true;
-  bubbleSort(colors);
-  isSorting = false;
-  System.out.println("Sorting finished");
 }
 
 ArrayList<Integer> generateColors(int baseColor, float gradientStep) {
@@ -110,4 +97,24 @@ ArrayList<Integer> generateColors(int baseColor, float gradientStep) {
   }
 
   return colors;
+}
+
+void runSortThread() {
+  isSorting = true;
+  println("Sorting started");
+
+  switch (sortToRun) {
+  case QUICK:
+    quickSort(colors, 0, colors.size() - 1);
+    break;
+  case BUBBLE:
+    bubbleSort(colors);
+    break;
+  default:
+    break;
+  }
+
+  println("Sorting finished");
+  isSorting = false;
+  sortToRun = SortType.NONE;
 }
