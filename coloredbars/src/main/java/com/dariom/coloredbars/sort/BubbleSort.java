@@ -1,18 +1,19 @@
-package com.dariom.coloredbars;
+package com.dariom.coloredbars.sort;
 
-import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
 
 public class BubbleSort {
 
-  private static final int BUBBLESORT_DRAW_DELAY_MS = 1;
+  private final Supplier<Boolean> shouldCancel;
+  private final Runnable triggerRedraw;
 
-  private final Main sketch;
-
-  public BubbleSort(Main sketch) {
-    this.sketch = sketch;
+  public BubbleSort(Supplier<Boolean> shouldCancel, Runnable triggerRedraw) {
+    this.shouldCancel = shouldCancel;
+    this.triggerRedraw = triggerRedraw;
   }
 
-  void bubbleSort(ArrayList<Integer> items) {
+  public void bubbleSort(List<Integer> items) {
     int n = items.size();
     boolean swapped;
 
@@ -20,7 +21,7 @@ public class BubbleSort {
       swapped = false;
 
       for (int j = 0; j < n - 1 - i; j++) {
-        if (sketch.stopSorting) {
+        if (shouldCancel.get()) {
           break;
         }
 
@@ -31,8 +32,7 @@ public class BubbleSort {
           swapped = true;
 
           // redraw UI
-          sketch.needsRedraw = true;
-          sketch.delay(BUBBLESORT_DRAW_DELAY_MS);
+          triggerRedraw.run();
         }
       }
 

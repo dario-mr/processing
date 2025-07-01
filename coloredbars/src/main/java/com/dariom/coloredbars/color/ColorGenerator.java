@@ -1,6 +1,7 @@
-package com.dariom.coloredbars;
+package com.dariom.coloredbars.color;
 
 import java.util.ArrayList;
+import java.util.List;
 import processing.core.PApplet;
 
 public class ColorGenerator {
@@ -11,14 +12,13 @@ public class ColorGenerator {
     this.sketch = sketch;
   }
 
-  public ArrayList<Integer> generateColors(int baseColor, float gradientStep) {
-    ArrayList<Integer> colors = new ArrayList<>();
+  public List<Integer> generateColors(int baseColor, float gradientStep) {
+    final List<Integer> colors = new ArrayList<>();
     final float baseColorRed = sketch.red(baseColor);
     final float baseColorBlue = sketch.blue(baseColor);
 
     for (float i = 0; i < 255; i += gradientStep) {
-      float green = i;
-      colors.add(sketch.color(baseColorRed, green, baseColorBlue));
+      colors.add(sketch.color(baseColorRed, i, baseColorBlue));
     }
 
     return colors;

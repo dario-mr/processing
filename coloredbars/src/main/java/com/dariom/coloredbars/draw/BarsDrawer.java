@@ -1,7 +1,8 @@
-package com.dariom.coloredbars;
+package com.dariom.coloredbars.draw;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import static java.util.Collections.shuffle;
+
+import java.util.List;
 import processing.core.PApplet;
 
 public class BarsDrawer {
@@ -12,12 +13,12 @@ public class BarsDrawer {
     this.sketch = sketch;
   }
 
-  void shuffleColorsAndDrawBars(ArrayList<Integer> colors, float barWidth) {
-    Collections.shuffle(colors);
+  public void shuffleColorsAndDrawBars(List<Integer> colors, float barWidth) {
+    shuffle(colors);
     drawBars(colors, barWidth);
   }
 
-  void drawBars(ArrayList<Integer> colors, float barWidth) {
+  public void drawBars(List<Integer> colors, float barWidth) {
     sketch.background(255);
 
     for (int i = 0; i < colors.size(); i++) {
@@ -29,7 +30,7 @@ public class BarsDrawer {
     }
   }
 
-  void drawBar(int x, int barColor, int barWidth) {
+  private void drawBar(int x, int barColor, int barWidth) {
     sketch.noStroke();
     sketch.fill(barColor);
     sketch.rect(x, 0, barWidth, sketch.height);
