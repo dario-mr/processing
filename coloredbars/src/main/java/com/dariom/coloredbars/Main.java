@@ -17,6 +17,8 @@ import com.dariom.coloredbars.sort.impl.HeapSort;
 import com.dariom.coloredbars.sort.impl.MergeSort;
 import com.dariom.coloredbars.sort.impl.QuickSort;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
 import processing.core.PApplet;
 import processing.sound.SoundFile;
 
@@ -38,6 +40,7 @@ public class Main extends PApplet {
   private List<Integer> colors;
   private float barWidth;
   private SoundFile sortSound;
+  private Map<SortType, Sort> sortMap;
 
   // variables visible between threads
   private volatile boolean needsRedraw = false;
@@ -57,10 +60,6 @@ public class Main extends PApplet {
   private BarsDrawer barsDrawer;
   private GuiDrawer guiDrawer;
   private FileLoader fileLoader;
-  private Sort quickSort;
-  private Sort bubbleSort;
-  private Sort mergeSort;
-  private Sort heapSort;
 
   public static void main(String[] args) {
     PApplet.main("com.dariom.coloredbars.Main");
@@ -78,38 +77,15 @@ public class Main extends PApplet {
     colorGenerator = new ColorGenerator(this);
     barsDrawer = new BarsDrawer(this);
     guiDrawer = new GuiDrawer(this);
-    bubbleSort = new BubbleSort(
-        () -> shouldStopSorting,
-        () -> {
-          needsRedraw = true;
-          delay(BUBBLESORT_DRAW_DELAY_MS);
-        });
-    quickSort = new QuickSort(
-        () -> shouldStopSorting,
-        () -> {
-          needsRedraw = true;
-          delay(QUICKSORT_DRAW_DELAY_MS);
-        });
-    mergeSort = new MergeSort(
-        () -> shouldStopSorting,
-        () -> {
-          needsRedraw = true;
-          delay(MERGESORT_DRAW_DELAY_MS);
-        });
-    heapSort = new HeapSort(
-        () -> shouldStopSorting,
-        () -> {
-          needsRedraw = true;
-          delay(HEAPSORT_DRAW_DELAY_MS);
-        });
     fileLoader = new FileLoader(this);
+    setupSortAlgorithms();
 
     // buttons
     shuffleBtn = new Button("Shuffle", 10, 10, 100, 30);
-    bubbleSortBtn = new Button("Bubble sort", 10, 70, 100, 30);
-    quickSortBtn = new Button("Quick sort", 10, 110, 100, 30);
-    mergeSortBtn = new Button("Merge sort", 10, 150, 100, 30);
-    heapSortBtn = new Button("Heap sort", 10, 190, 100, 30);
+    bubbleSortBtn = new Button("Bubble sort", 10, buttonY(1), 100, 30);
+    quickSortBtn = new Button("Quick sort", 10, buttonY(2), 100, 30);
+    mergeSortBtn = new Button("Merge sort", 10, buttonY(3), 100, 30);
+    heapSortBtn = new Button("Heap sort", 10, buttonY(4), 100, 30);
     quitBtn = new Button("Quit", 10, height - 50, 100, 30);
 
     colors = colorGenerator.generateColors(BASE_COLOR, GRADIENT_STEP);
@@ -131,6 +107,41 @@ public class Main extends PApplet {
       needsRedraw = false;
     }
 
+    drawAllButtons();
+  }
+
+  @Override
+  public void mouseReleased() {
+    handleGeneralButton(shuffleBtn, () -> {
+      shouldStopSorting = true;
+      barsDrawer.shuffleColorsAndDrawBars(colors, barWidth);
+    });
+
+    handleGeneralButton(quitBtn, this::exit);
+
+    handleSortButton(quickSortBtn, QUICK);
+    handleSortButton(bubbleSortBtn, BUBBLE);
+    handleSortButton(mergeSortBtn, MERGE);
+    handleSortButton(heapSortBtn, HEAP);
+  }
+
+  private int buttonY(int index) {
+    return 10 + index * 40;
+  }
+
+  private void handleGeneralButton(Button btn, Runnable action) {
+    if (btn.isClicked(mouseX, mouseY)) {
+      action.run();
+    }
+  }
+
+  private void handleSortButton(Button btn, SortType type) {
+    if (!isSorting && btn.isClicked(mouseX, mouseY)) {
+      sort(type, colors);
+    }
+  }
+
+  private void drawAllButtons() {
     guiDrawer.drawButton(shuffleBtn);
     guiDrawer.drawButton(quickSortBtn);
     guiDrawer.drawButton(bubbleSortBtn);
@@ -139,66 +150,39 @@ public class Main extends PApplet {
     guiDrawer.drawButton(quitBtn);
   }
 
-  @Override
-  public void mouseReleased() {
-    // shuffle button
-    if (shuffleBtn.isClicked(mouseX, mouseY)) {
-      shouldStopSorting = true;
-      barsDrawer.shuffleColorsAndDrawBars(colors, barWidth);
-    }
-
-    // quit button
-    if (quitBtn.isClicked(mouseX, mouseY)) {
-      exit();
-    }
-
-    // quicksort button
-    if (!isSorting && quickSortBtn.isClicked(mouseX, mouseY)) {
-      sort(QUICK, colors);
-    }
-
-    // bubblesort button
-    if (!isSorting && bubbleSortBtn.isClicked(mouseX, mouseY)) {
-      sort(BUBBLE, colors);
-    }
-
-    // mergesort button
-    if (!isSorting && mergeSortBtn.isClicked(mouseX, mouseY)) {
-      sort(MERGE, colors);
-    }
-
-    // mergesort button
-    if (!isSorting && heapSortBtn.isClicked(mouseX, mouseY)) {
-      sort(HEAP, colors);
-    }
-  }
-
   private void sort(SortType sortType, List<Integer> colors) {
     new Thread(() -> {
-      println("Sorting started");
-      shouldStopSorting = false;
-      isSorting = true;
+      try {
+        println("Sorting started");
+        shouldStopSorting = false;
+        isSorting = true;
 
-      switch (sortType) {
-        case QUICK:
-          quickSort.sort(colors);
-          break;
-        case BUBBLE:
-          bubbleSort.sort(colors);
-          break;
-        case MERGE:
-          mergeSort.sort(colors);
-          break;
-        case HEAP:
-          heapSort.sort(colors);
-          break;
-        default:
-          break;
+        sortMap.get(sortType).sort(colors);
+      } finally {
+        isSorting = false;
+        println("Sorting finished");
       }
-
-      isSorting = false;
-      println("Sorting finished");
     }).start();
+  }
+
+  private void setupSortAlgorithms() {
+    sortMap = Map.of(
+        BUBBLE, new BubbleSort(shouldStopSorting(), triggerRedrawWithDelay(BUBBLESORT_DRAW_DELAY_MS)),
+        QUICK, new QuickSort(shouldStopSorting(), triggerRedrawWithDelay(QUICKSORT_DRAW_DELAY_MS)),
+        MERGE, new MergeSort(shouldStopSorting(), triggerRedrawWithDelay(MERGESORT_DRAW_DELAY_MS)),
+        HEAP, new HeapSort(shouldStopSorting(), triggerRedrawWithDelay(HEAPSORT_DRAW_DELAY_MS))
+    );
+  }
+
+  private Supplier<Boolean> shouldStopSorting() {
+    return () -> shouldStopSorting;
+  }
+
+  private Runnable triggerRedrawWithDelay(int delayMs) {
+    return () -> {
+      needsRedraw = true;
+      delay(delayMs);
+    };
   }
 
 }
