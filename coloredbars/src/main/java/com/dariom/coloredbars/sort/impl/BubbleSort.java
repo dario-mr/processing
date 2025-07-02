@@ -1,9 +1,10 @@
-package com.dariom.coloredbars.sort;
+package com.dariom.coloredbars.sort.impl;
 
+import com.dariom.coloredbars.sort.Sort;
 import java.util.List;
 import java.util.function.Supplier;
 
-public class BubbleSort {
+public class BubbleSort implements Sort {
 
   private final Supplier<Boolean> shouldCancel;
   private final Runnable triggerRedraw;
@@ -13,7 +14,8 @@ public class BubbleSort {
     this.triggerRedraw = triggerRedraw;
   }
 
-  public void bubbleSort(List<Integer> items) {
+  @Override
+  public void sort(List<Integer> items) {
     int n = items.size();
     boolean swapped;
 

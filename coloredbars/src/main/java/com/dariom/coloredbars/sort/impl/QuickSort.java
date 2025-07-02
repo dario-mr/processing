@@ -1,9 +1,10 @@
-package com.dariom.coloredbars.sort;
+package com.dariom.coloredbars.sort.impl;
 
+import com.dariom.coloredbars.sort.Sort;
 import java.util.List;
 import java.util.function.Supplier;
 
-public class QuickSort {
+public class QuickSort implements Sort {
 
   private final Supplier<Boolean> shouldCancel;
   private final Runnable triggerRedraw;
@@ -13,15 +14,24 @@ public class QuickSort {
     this.triggerRedraw = triggerRedraw;
   }
 
-  public void quickSort(List<Integer> items, int low, int high) {
+  @Override
+  public void sort(List<Integer> items) {
+    if (items == null || items.size() <= 1) {
+      return;
+    }
+
+    sort(items, 0, items.size() - 1);
+  }
+
+  private void sort(List<Integer> items, int low, int high) {
     if (shouldCancel.get()) {
       return;
     }
 
     if (low < high) {
       int pi = partition(items, low, high);
-      quickSort(items, low, pi - 1);
-      quickSort(items, pi + 1, high);
+      sort(items, low, pi - 1);
+      sort(items, pi + 1, high);
     }
   }
 

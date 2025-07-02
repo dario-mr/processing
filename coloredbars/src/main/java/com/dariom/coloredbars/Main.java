@@ -1,6 +1,8 @@
 package com.dariom.coloredbars;
 
 import static com.dariom.coloredbars.domain.SortType.BUBBLE;
+import static com.dariom.coloredbars.domain.SortType.HEAP;
+import static com.dariom.coloredbars.domain.SortType.MERGE;
 import static com.dariom.coloredbars.domain.SortType.QUICK;
 
 import com.dariom.coloredbars.color.ColorGenerator;
@@ -9,8 +11,11 @@ import com.dariom.coloredbars.domain.SortType;
 import com.dariom.coloredbars.draw.BarsDrawer;
 import com.dariom.coloredbars.draw.GuiDrawer;
 import com.dariom.coloredbars.file.FileLoader;
-import com.dariom.coloredbars.sort.BubbleSort;
-import com.dariom.coloredbars.sort.QuickSort;
+import com.dariom.coloredbars.sort.Sort;
+import com.dariom.coloredbars.sort.impl.BubbleSort;
+import com.dariom.coloredbars.sort.impl.HeapSort;
+import com.dariom.coloredbars.sort.impl.MergeSort;
+import com.dariom.coloredbars.sort.impl.QuickSort;
 import java.util.List;
 import processing.core.PApplet;
 import processing.sound.SoundFile;
@@ -21,11 +26,13 @@ public class Main extends PApplet {
 
   // band colors generation
   private final int BASE_COLOR = color(255, 0, 0);
-  private static final float GRADIENT_STEP = 1;
+  private static final float GRADIENT_STEP = 0.5f;
 
   // re-draw delays
   private static final int BUBBLESORT_DRAW_DELAY_MS = 1;
-  private static final int QUICKSORT_DRAW_DELAY_MS = 10;
+  private static final int QUICKSORT_DRAW_DELAY_MS = 3;
+  private static final int MERGESORT_DRAW_DELAY_MS = 3;
+  private static final int HEAPSORT_DRAW_DELAY_MS = 2;
 
   // misc
   private List<Integer> colors;
@@ -39,17 +46,21 @@ public class Main extends PApplet {
 
   // buttons
   private Button shuffleBtn;
-  private Button quickSortBtn;
   private Button bubbleSortBtn;
+  private Button quickSortBtn;
+  private Button mergeSortBtn;
+  private Button heapSortBtn;
   private Button quitBtn;
 
   // constructor injections
   private ColorGenerator colorGenerator;
   private BarsDrawer barsDrawer;
   private GuiDrawer guiDrawer;
-  private QuickSort quickSort;
-  private BubbleSort bubbleSort;
   private FileLoader fileLoader;
+  private Sort quickSort;
+  private Sort bubbleSort;
+  private Sort mergeSort;
+  private Sort heapSort;
 
   public static void main(String[] args) {
     PApplet.main("com.dariom.coloredbars.Main");
@@ -67,24 +78,38 @@ public class Main extends PApplet {
     colorGenerator = new ColorGenerator(this);
     barsDrawer = new BarsDrawer(this);
     guiDrawer = new GuiDrawer(this);
-    quickSort = new QuickSort(
-        () -> shouldStopSorting,
-        () -> {
-          needsRedraw = true;
-          delay(QUICKSORT_DRAW_DELAY_MS);
-        });
     bubbleSort = new BubbleSort(
         () -> shouldStopSorting,
         () -> {
           needsRedraw = true;
           delay(BUBBLESORT_DRAW_DELAY_MS);
         });
+    quickSort = new QuickSort(
+        () -> shouldStopSorting,
+        () -> {
+          needsRedraw = true;
+          delay(QUICKSORT_DRAW_DELAY_MS);
+        });
+    mergeSort = new MergeSort(
+        () -> shouldStopSorting,
+        () -> {
+          needsRedraw = true;
+          delay(MERGESORT_DRAW_DELAY_MS);
+        });
+    heapSort = new HeapSort(
+        () -> shouldStopSorting,
+        () -> {
+          needsRedraw = true;
+          delay(HEAPSORT_DRAW_DELAY_MS);
+        });
     fileLoader = new FileLoader(this);
 
     // buttons
     shuffleBtn = new Button("Shuffle", 10, 10, 100, 30);
-    quickSortBtn = new Button("Quick sort", 10, 70, 100, 30);
-    bubbleSortBtn = new Button("Bubble sort", 10, 110, 100, 30);
+    bubbleSortBtn = new Button("Bubble sort", 10, 70, 100, 30);
+    quickSortBtn = new Button("Quick sort", 10, 110, 100, 30);
+    mergeSortBtn = new Button("Merge sort", 10, 150, 100, 30);
+    heapSortBtn = new Button("Heap sort", 10, 190, 100, 30);
     quitBtn = new Button("Quit", 10, height - 50, 100, 30);
 
     colors = colorGenerator.generateColors(BASE_COLOR, GRADIENT_STEP);
@@ -109,11 +134,13 @@ public class Main extends PApplet {
     guiDrawer.drawButton(shuffleBtn);
     guiDrawer.drawButton(quickSortBtn);
     guiDrawer.drawButton(bubbleSortBtn);
+    guiDrawer.drawButton(mergeSortBtn);
+    guiDrawer.drawButton(heapSortBtn);
     guiDrawer.drawButton(quitBtn);
   }
 
   @Override
-  public void mousePressed() {
+  public void mouseReleased() {
     // shuffle button
     if (shuffleBtn.isClicked(mouseX, mouseY)) {
       shouldStopSorting = true;
@@ -134,6 +161,16 @@ public class Main extends PApplet {
     if (!isSorting && bubbleSortBtn.isClicked(mouseX, mouseY)) {
       sort(BUBBLE, colors);
     }
+
+    // mergesort button
+    if (!isSorting && mergeSortBtn.isClicked(mouseX, mouseY)) {
+      sort(MERGE, colors);
+    }
+
+    // mergesort button
+    if (!isSorting && heapSortBtn.isClicked(mouseX, mouseY)) {
+      sort(HEAP, colors);
+    }
   }
 
   private void sort(SortType sortType, List<Integer> colors) {
@@ -144,10 +181,16 @@ public class Main extends PApplet {
 
       switch (sortType) {
         case QUICK:
-          quickSort.quickSort(colors, 0, colors.size() - 1);
+          quickSort.sort(colors);
           break;
         case BUBBLE:
-          bubbleSort.bubbleSort(colors);
+          bubbleSort.sort(colors);
+          break;
+        case MERGE:
+          mergeSort.sort(colors);
+          break;
+        case HEAP:
+          heapSort.sort(colors);
           break;
         default:
           break;

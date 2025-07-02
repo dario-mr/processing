@@ -8,7 +8,7 @@ import processing.core.PFont;
 
 public class GuiDrawer {
 
-  private static final int FONT_SIZE = 14;
+  private static final int FONT_SIZE = 8;
 
   private final PApplet sketch;
   private final PFont font;
